@@ -63,7 +63,6 @@ def authorize():
     return redirect('/')
 
 # The route that needs to be protected by authorization
-
 @app.route('/main_app_route')
 @login_required
 def main_app():
