@@ -7,7 +7,7 @@ in the Google API Console. Within this project, you'll create OAuth 2.0 credenti
 application's redirect endpoint.
 """
 
-from flask import Flask, redirect, url_for, session, request
+from flask import Flask, redirect, url_for, session, request, render_template
 from functools import wraps
 from authlib.integrations.flask_client import OAuth
 import os
@@ -32,7 +32,8 @@ google = oauth.register(
     client_kwargs={'scope': 'openid profile email'},
 )
 
-# Authorization check function
+# This decorator checks if the user's email is in the session. 
+# If it's not, the user is redirected to the login page
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -41,16 +42,18 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Landing page
 @app.route('/')
 def index():
-    email = dict(session).get('email', None)
-    return f"Hello, {'not logged in' if email is None else email}"
+    return render_template('index.html')
 
+# Login route
 @app.route('/login')
 def login():
     redirect_uri = url_for('authorize', _external=True)
     return google.authorize_redirect(redirect_uri)
 
+# Authorization route
 @app.route('/auth/redirect')
 def authorize():
     token = google.authorize_access_token()
@@ -59,6 +62,15 @@ def authorize():
     session['email'] = user_info['email']
     return redirect('/')
 
+# The route that needs to be protected by authorization
+
+@app.route('/main_app_route')
+@login_required
+def main_app():
+    # Assuming 'email' is used to determine if a user is logged in
+    return "Welcome to the search page! Only logged-in users can see this."
+
+# Logout route
 @app.route('/logout')
 def logout():
     session.pop('email', None)
