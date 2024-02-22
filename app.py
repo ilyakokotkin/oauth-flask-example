@@ -75,5 +75,6 @@ def logout():
     session.pop('email', None)
     return redirect('/')
 
+# The app is currently in debug mode. Change it when using in production 
 if __name__ == '__main__':
     app.run(debug=True)
